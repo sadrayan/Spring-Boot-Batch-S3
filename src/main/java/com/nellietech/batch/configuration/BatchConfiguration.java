@@ -1,7 +1,11 @@
 package com.nellietech.batch.configuration;
 
 import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.nellietech.batch.dao.entity.Customer;
+import com.nellietech.batch.service.S3Service;
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.Job;
@@ -22,9 +26,7 @@ import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
+import org.springframework.core.io.*;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
@@ -32,6 +34,9 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import javax.sql.DataSource;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 
 @Configuration
@@ -44,38 +49,23 @@ public class BatchConfiguration {
     @Autowired
     private JobBuilderFactory jobBuilderFactory;
     @Autowired
-    private ResourceLoader resourceLoader;
-    @Autowired
     private StepBuilderFactory stepBuilderFactory;
 
     @Autowired
     AmazonS3 amazonS3Client;
+    @Autowired
+    S3Service s3Service;
 
-    private final String amazonS3Bucket = "sadrayan-spring-batch";
-    private final String file = "data.csv";
+
+    private final String amazonS3BucketName = "sadrayan-spring-batch";
+    private final String fileName = "data.csv";
 
     @Bean
     public FlatFileItemReader<Customer> reader() {
-//        Resource resource = resourceLoader.getResource(String.format("s3://%s/%s", amazonS3Bucket, file));
-//        Resource resource = resourceLoader.getResource("s3://" + amazonS3Bucket + "/" + file);
-        Resource resource = new ClassPathResource("data/data.csv");
-//        UrlResource resource = null;
-
-//        Resource resource = awsReader;
-        try {
-//            s3Service.getFile(file);
-//              resource = new UrlResource("https://s3.us-east-1.amazonaws.com/sadrayan-spring-batch/data.csv");
-//              resource = new FileUrlResource("s3://sadrayan-spring-batch/data.csv");
-//            InputStream inputStream = resource.getInputStream();
-//            amazonS3Client.getObject("sadrayan-spring-batch","data.csv");
-        } catch (Exception e) {
-            e.printStackTrace();
-            logger.error(e.toString());
-        }
 
         return new FlatFileItemReaderBuilder<Customer>()
                 .name("customerItemReader")
-                .resource(resource)
+                .resource(s3Service.getS3Resource())
                 .strict(false) // that was the trick for aws s3
                 .delimited()
                 .names("first_name", "last_name", "email", "phone", "city", "zip")
@@ -126,7 +116,8 @@ public class BatchConfiguration {
     public JdbcBatchItemWriter<Customer> writer(final DataSource dataSource) {
         return new JdbcBatchItemWriterBuilder<Customer>()
                 .itemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<>())
-                .sql("INSERT INTO CUSTOMER (first_name, last_name, email, phone, city, zip, timestamp) VALUES (:first_name, :last_name, :email, :phone, :city, :zip, :timestamp)")
+                .sql("INSERT INTO CUSTOMER (first_name, last_name, email, phone, city, zip, timestamp) " +
+                        "VALUES (:first_name, :last_name, :email, :phone, :city, :zip, :timestamp)")
                 .dataSource(dataSource)
                 .build();
     }

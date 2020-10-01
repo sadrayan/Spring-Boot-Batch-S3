@@ -7,6 +7,7 @@ import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
@@ -19,28 +20,23 @@ public class S3Service {
     private final Logger logger = LoggerFactory.getLogger(S3Service.class);
     @Autowired
     AmazonS3 amazonS3Client;
-    @Autowired
-    private ResourceLoader resourceLoader;
 
-//    @Value("${aws.s3.bucket}")
-    private String amazonS3Bucket = "sadrayan-spring-batch";
+    private final String amazonS3BucketName = "sadrayan-spring-batch";
+    private final String fileName = "data.csv";
 
-    public Resource getFiles(final String file) {
-        logger.info("File to be accessed :: " + String.format("s3://%s/%s", amazonS3Bucket, file));
-        return resourceLoader.getResource(String.format("s3://%s/%s", amazonS3Bucket, file));
-    }
+    public Resource getS3Resource(){
+        logger.info("Fetching S3 object");
+        S3Object s3Object = amazonS3Client.getObject(amazonS3BucketName, fileName);
 
-    public byte[] getFile(final String file) {
-        S3Object obj = amazonS3Client.getObject(amazonS3Bucket, file);
-        S3ObjectInputStream stream = obj.getObjectContent();
+        byte[] content = new byte[0];
         try {
-            byte[] content = IOUtils.toByteArray(stream);
-            obj.close();
-            return content;
+            content = IOUtils.toByteArray(s3Object.getObjectContent());
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return null;
+        return new ByteArrayResource(content);
     }
+
+
 
 }
