@@ -25,6 +25,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.core.task.AsyncTaskExecutor;
+import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -74,7 +76,7 @@ public class BatchConfiguration {
                 .resource(resource)
                 .strict(false) // that was the trick for aws s3
                 .delimited()
-                .names(new String[]{"first_name", "last_name", "email", "phone", "city", "zip"})
+                .names("first_name", "last_name", "email", "phone", "city", "zip")
                 .lineMapper(lineMapper())
                 .fieldSetMapper(new BeanWrapperFieldSetMapper<Customer>() {{
                     setTargetType(Customer.class);
@@ -85,10 +87,17 @@ public class BatchConfiguration {
     @Bean
     public TaskExecutor taskExecutor() {
         ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
-        taskExecutor.setCorePoolSize(2);
-        taskExecutor.setMaxPoolSize(2);
-        taskExecutor.setQueueCapacity(0);
+        taskExecutor.setCorePoolSize(5);
+        taskExecutor.setMaxPoolSize(5);
+        taskExecutor.setQueueCapacity(25);
         return taskExecutor;
+    }
+
+    @Bean
+    AsyncTaskExecutor asyncTaskExecutor () {
+        SimpleAsyncTaskExecutor t = new SimpleAsyncTaskExecutor();
+        t.setConcurrencyLimit(100);
+        return t;
     }
 
     @Bean
@@ -135,8 +144,9 @@ public class BatchConfiguration {
         return stepBuilderFactory.get("step1")
                 .<Customer, Customer> chunk(10)
                 .reader(reader())
-                .processor(processor())
                 .writer(writer)
+                .processor(processor())
+                .taskExecutor(taskExecutor()) // for running in multi-thread
                 .build();
     }
 }
