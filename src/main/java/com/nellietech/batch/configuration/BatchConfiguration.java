@@ -1,11 +1,7 @@
 package com.nellietech.batch.configuration;
 
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.nellietech.batch.dao.entity.Customer;
 import com.nellietech.batch.service.S3Service;
-import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.Job;
@@ -26,7 +22,6 @@ import org.springframework.batch.item.file.transform.DelimitedLineTokenizer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.*;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.core.task.TaskExecutor;
@@ -34,9 +29,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import javax.sql.DataSource;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 
 
 @Configuration
@@ -50,19 +42,11 @@ public class BatchConfiguration {
     private JobBuilderFactory jobBuilderFactory;
     @Autowired
     private StepBuilderFactory stepBuilderFactory;
-
-    @Autowired
-    AmazonS3 amazonS3Client;
     @Autowired
     S3Service s3Service;
 
-
-    private final String amazonS3BucketName = "sadrayan-spring-batch";
-    private final String fileName = "data.csv";
-
     @Bean
     public FlatFileItemReader<Customer> reader() {
-
         return new FlatFileItemReaderBuilder<Customer>()
                 .name("customerItemReader")
                 .resource(s3Service.getS3Resource())

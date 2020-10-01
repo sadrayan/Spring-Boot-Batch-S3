@@ -12,24 +12,25 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class AWSConfiguration {
-        @Value("${aws.access_key_id}")
-        private String accessKeyId;
-        @Value("${aws.secret_access_key}")
-        private String secretAccessKey;
-        @Value("${aws.s3.region}")
-        private String region;
 
-        @Bean
-        public AWSCredentialsProvider credentialsProvider() {
-            return new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKeyId, secretAccessKey));
-        }
+    @Value("${aws.access_key_id}")
+    private String accessKeyId;
+    @Value("${aws.secret_access_key}")
+    private String secretAccessKey;
+    @Value("${aws.s3.region}")
+    private String region;
 
-        @Bean
-        public AmazonS3 getAmazonS3Client() {
-            return AmazonS3ClientBuilder
-                    .standard()
-                    .withRegion(Regions.fromName(region))
-                    .withCredentials(credentialsProvider())
-                    .build();
-        }
+    @Bean
+    public AWSCredentialsProvider credentialsProvider() {
+        return new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKeyId, secretAccessKey));
     }
+
+    @Bean
+    public AmazonS3 getAmazonS3Client() {
+        return AmazonS3ClientBuilder
+                .standard()
+                .withRegion(Regions.fromName(region))
+                .withCredentials(credentialsProvider())
+                .build();
+    }
+}
