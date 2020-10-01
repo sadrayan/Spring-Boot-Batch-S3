@@ -32,7 +32,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import javax.sql.DataSource;
-import java.io.InputStream;
 
 
 @Configuration
@@ -42,14 +41,17 @@ public class BatchConfiguration {
 
     private final Logger logger = LoggerFactory.getLogger(BatchConfiguration.class);
 
-    @Autowired public JobBuilderFactory jobBuilderFactory;
-    @Autowired private ResourceLoader resourceLoader;
-    @Autowired public StepBuilderFactory stepBuilderFactory;
+    @Autowired
+    private JobBuilderFactory jobBuilderFactory;
+    @Autowired
+    private ResourceLoader resourceLoader;
+    @Autowired
+    private StepBuilderFactory stepBuilderFactory;
 
     @Autowired
     AmazonS3 amazonS3Client;
 
-    private String amazonS3Bucket = "sadrayan-spring-batch";
+    private final String amazonS3Bucket = "sadrayan-spring-batch";
     private final String file = "data.csv";
 
     @Bean
@@ -94,7 +96,7 @@ public class BatchConfiguration {
     }
 
     @Bean
-    AsyncTaskExecutor asyncTaskExecutor () {
+    AsyncTaskExecutor asyncTaskExecutor() {
         SimpleAsyncTaskExecutor t = new SimpleAsyncTaskExecutor();
         t.setConcurrencyLimit(100);
         return t;
@@ -124,7 +126,7 @@ public class BatchConfiguration {
     public JdbcBatchItemWriter<Customer> writer(final DataSource dataSource) {
         return new JdbcBatchItemWriterBuilder<Customer>()
                 .itemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<>())
-                .sql("INSERT INTO CUSTOMER (first_name, last_name, email, phone, city, zip) VALUES (:first_name, :last_name, :email, :phone, :city, :zip)")
+                .sql("INSERT INTO CUSTOMER (first_name, last_name, email, phone, city, zip, timestamp) VALUES (:first_name, :last_name, :email, :phone, :city, :zip, :timestamp)")
                 .dataSource(dataSource)
                 .build();
     }
@@ -142,7 +144,7 @@ public class BatchConfiguration {
     @Bean
     public Step step1(JdbcBatchItemWriter<Customer> writer) {
         return stepBuilderFactory.get("step1")
-                .<Customer, Customer> chunk(10)
+                .<Customer, Customer>chunk(10)
                 .reader(reader())
                 .writer(writer)
                 .processor(processor())

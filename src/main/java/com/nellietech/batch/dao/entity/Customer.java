@@ -9,6 +9,7 @@ import org.hibernate.annotations.GenericGenerator;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.sql.Date;
+import java.sql.Timestamp;
 import java.util.UUID;
 
 @Entity
@@ -45,6 +46,6 @@ public class Customer {
     private String zip;
 
     @Column(name = "timestamp")
-    private Date timestamp;
+    private Timestamp timestamp;
 
 }

@@ -5,6 +5,7 @@ import com.nellietech.batch.dao.entity.Customer;
 import org.springframework.batch.item.ItemProcessor;
 
 import java.sql.Date;
+import java.sql.Timestamp;
 
 public class RecordProcessor implements ItemProcessor<Customer, Customer>{
 
@@ -18,7 +19,7 @@ public class RecordProcessor implements ItemProcessor<Customer, Customer>{
         processedRecord.setCity(record.getCity());
         processedRecord.setZip(record.getZip());
         // adding the timestamp
-        processedRecord.setTimestamp(new Date(System.currentTimeMillis()));
+        processedRecord.setTimestamp(new Timestamp(System.currentTimeMillis()));
         return processedRecord;
     }
 }
