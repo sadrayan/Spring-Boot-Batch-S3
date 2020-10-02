@@ -1,5 +1,7 @@
 FROM openjdk:8-jdk-alpine
 
+MAINTAINER Sadrayan
+
 RUN apk --no-cache add curl
 VOLUME /tmp
 
@@ -16,4 +18,4 @@ ENV AWS_SECRET_ACCESS_KEY=$SECRET_ARG
 ARG JAR_FILE=target/*.jar
 COPY ${JAR_FILE} app.jar
 
-ENTRYPOINT ["java","-jar","/app.jar"]
+ENTRYPOINT ["java","-jar","app.jar"]
