@@ -25,7 +25,7 @@ public class ScheduledTasks {
     @Autowired
     Job job;
 
-    @Scheduled(cron = "0 0 * * *")
+    @Scheduled(cron = "0 0 * * * *")
     public void perform() throws Exception {
         log.info("The time is now {}", dateFormat.format(new Date()));
         JobParameters params = new JobParametersBuilder()
